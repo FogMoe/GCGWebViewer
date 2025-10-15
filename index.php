@@ -88,7 +88,7 @@ $previousPageUrl = buildPageUrl($page - 1);
                     </span>
                 </div>
                 <div class="cardLin3">
-                    <img class="cardPic" src="https://raw.githubusercontent.com/FogMoe/galaxycardgame/master/pics/<?= htmlspecialchars($card['id']) ?>.jpg" alt="<?= htmlspecialchars($card['name']) ?>">
+                    <img class="cardPic" src="https://ghfast.top/https://raw.githubusercontent.com/FogMoe/galaxycardgame/master/pics/<?= htmlspecialchars($card['id']) ?>.jpg" alt="<?= htmlspecialchars($card['name']) ?>">
                 </div>
                 <div class="cardLin4">
                     <textarea readonly class="cardMiaoshu"><?= htmlspecialchars($card['desc']) ?></textarea>

@@ -14,8 +14,10 @@ class View{
             if($card['def']===-2):$card['def']='?';endif;
 
             //如果怪兽星大于99意味着要变成十六进制后取最后2位
-            if($card['level']>99):
-                $card['level']=(int)dechex($card['level'])%100;
+            if($card['level'] > 99):
+                // dechex 返回字符串，需要先转换为十六进制，然后取模
+                $hexLevel = dechex($card['level']);
+                $card['level'] = hexdec(substr($hexLevel, -2));
             endif;
 
             //类型

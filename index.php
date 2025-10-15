@@ -1,14 +1,23 @@
 <?php
-include 'protectedFolder/View.php'; 
+// 生产环境错误处理
+try {
+    include 'protectedFolder/View.php';
 
-$view = new View();
-$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-$pageSize = 10; // 每页显示10条记录
-$search = isset($_GET['search']) ? $_GET['search'] : null;
+    $view = new View();
+    $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+    $pageSize = 10; // 每页显示10条记录
+    $search = isset($_GET['search']) && trim($_GET['search']) !== '' ? trim($_GET['search']) : null;
 
-$cards = $view->getCardsPageViewByIdOrName($search, $search, $page, $pageSize);
-$totalCards = $view->getTotalCardCount();
-$totalPages = ceil($totalCards / $pageSize);
+    $cards = $view->getCardsPageViewByIdOrName($search, $search, $page, $pageSize);
+    $totalCards = $view->getTotalCardCount();
+    $totalPages = ceil($totalCards / $pageSize);
+} catch (Exception $e) {
+    // 记录错误但不显示详细信息给用户
+    error_log("Error in index.php: " . $e->getMessage());
+    // 显示友好的错误页面
+    http_response_code(500);
+    die('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>系统错误</title></head><body><h1>系统暂时不可用</h1><p>我们遇到了一些技术问题，请稍后再试。</p></body></html>');
+}
 
 function buildPageUrl($page) {
     $queryParams = $_GET;
@@ -56,7 +65,7 @@ $previousPageUrl = buildPageUrl($page - 1);
     <div class="search">
         <form method="GET">
             <label for="search">卡片 ID/名称:</label>
-            <input type="text" id="search" name="search" value="<?= htmlspecialchars($search) ?>">
+            <input type="text" id="search" name="search" value="<?= htmlspecialchars($search ?? '') ?>">
             <button type="submit">查询</button>
         </form>
     </div>

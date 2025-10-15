@@ -1,8 +1,11 @@
 <?php
 require_once 'Card.php';
-// 设置报错级别
+require_once 'UpdateManager.php';
+// 生产环境：关闭错误显示，只记录到日志
+// 开发环境：可以临时改为 1 来调试
 error_reporting(E_ALL);
-ini_set("display_errors", 1);
+ini_set("display_errors", 0);
+ini_set("log_errors", 1);
 
 class Controller {
 
@@ -10,7 +13,26 @@ class Controller {
 
     // 构造函数，用于初始化数据库连接
     public function __construct() {
-        $this->db = new SQLite3('protectedFolder/cards.cdb');
+        $dbPath = 'protectedFolder/cards.cdb';
+
+        // 自动检查更新（有1小时间隔保护，不会频繁请求）
+        // 如果数据库不存在会自动下载，否则按间隔检查更新
+        try {
+            $updateManager = new UpdateManager();
+            $updateManager->checkForUpdates();
+        } catch (Exception $e) {
+            // 更新检查失败不影响主功能，只记录日志
+            error_log("Update check failed: " . $e->getMessage());
+        }
+
+        // 添加错误处理，防止数据库损坏或不存在时暴露敏感信息
+        try {
+            $this->db = new SQLite3($dbPath);
+        } catch (Exception $e) {
+            // 生产环境：记录错误但不显示给用户
+            error_log("Database connection failed: " . $e->getMessage());
+            throw new Exception("数据库连接失败，请联系管理员");
+        }
     }
     // 析构函数
     public function __destruct() {

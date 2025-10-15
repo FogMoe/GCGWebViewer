@@ -41,8 +41,20 @@ config.local.php
 database.config.php
 
 # 服务器配置文件
-nginx.htaccess
-.htaccess
+# nginx.htaccess
+# .htaccess
+
+# 更新管理相关文件
+protectedFolder/update.json
+protectedFolder/update.log
+protectedFolder/update.log.*
+protectedFolder/update.lock
+protectedFolder/rate_limit.json
+protectedFolder/*.tmp
+protectedFolder/*.backup
+
+# 测试文件（不应部署到生产环境）
+protectedFolder/Test.php
 
 # PHPStorm
 .phpunit.result.cache

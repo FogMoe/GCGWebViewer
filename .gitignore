@@ -1,2 +1,69 @@
 # 忽略上传的卡片数据文件夹
 UploadCardData/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 编辑器和IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# PHP
+*.log
+composer.phar
+vendor/
+composer.lock
+
+# 数据库备份文件
+*.db.backup
+*.sqlite.backup
+*.sql.backup
+
+# 上传文件和临时文件
+uploads/
+tmp/
+temp/
+*.tmp
+
+# 环境配置文件
+.env
+.env.local
+config.local.php
+database.config.php
+
+# 服务器配置文件
+nginx.htaccess
+.htaccess
+
+# PHPStorm
+.phpunit.result.cache
+
+# 依赖和包管理
+node_modules/
+bower_components/
+
+# 缓存
+cache/
+*.cache
+
+# 备份文件
+*.bak
+*.backup
+*~
+
+# Windows
+[Dd]esktop.ini
+$RECYCLE_BIN/
+*.lnk
+
+# PHPStudy 相关
+phpstudy.log

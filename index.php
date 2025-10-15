@@ -25,7 +25,7 @@ $previousPageUrl = buildPageUrl($page - 1);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FOGMOE YGO Card List</title>
+    <title>Galaxy Card Game</title>
     <link rel="stylesheet" type="text/css" href="./styles.css">
     <style>
         .cardList{text-align:center;border:2px}
@@ -52,7 +52,7 @@ $previousPageUrl = buildPageUrl($page - 1);
     </style>
 </head>
 <body>
-    <h1  align="center">FOGMOE YGO Card List</h1>
+    <h1  align="center">Galaxy Card Game</h1>
     <div class="search">
         <form method="GET">
             <label for="search">卡片 ID/名称:</label>
@@ -71,22 +71,22 @@ $previousPageUrl = buildPageUrl($page - 1);
                 </div>
                 <div class="cardLin2">
                     <span class="cardRace"><?= htmlspecialchars($card['race']) ?></span>
-                    字段:<span class="cardZiduan"><?= htmlspecialchars($card['setcode']) ?></span>
+                    <span style="visibility: hidden;">字段:<span class="cardZiduan"><?= htmlspecialchars($card['setcode']) ?></span></span>
                     
                     <span class="cardTypeAndLevel">
                         <span class="cardType"><?= htmlspecialchars($card['type']) ?></span>
-                        <?php if($card['level']>0): ?><span class="cardLevel"><?= htmlspecialchars($card['level']) ?>☆</span><?php endif;?>
+                        <?php if($card['level']>0): ?><span class="cardLevel"><?= htmlspecialchars($card['level']) ?>补给</span><?php endif;?>
                     </span>
                 </div>
                 <div class="cardLin3">
-                    <img class="cardPic" src="https://mirror.ghproxy.com/https://raw.githubusercontent.com/FogMoe/YGOCustomCards/main/pics/<?= htmlspecialchars($card['id']) ?>.jpg" alt="<?= htmlspecialchars($card['name']) ?>">
+                    <img class="cardPic" src="https://raw.githubusercontent.com/FogMoe/galaxycardgame/master/pics/<?= htmlspecialchars($card['id']) ?>.jpg" alt="<?= htmlspecialchars($card['name']) ?>">
                 </div>
                 <div class="cardLin4">
                     <textarea readonly class="cardMiaoshu"><?= htmlspecialchars($card['desc']) ?></textarea>
                 </div>
                 <div class="cardLin5">
                     <span class="cardId">ID:<?= htmlspecialchars($card['id']) ?></span>
-                    <span class="cardAtkAndDef">ATK:<?= htmlspecialchars($card['atk']) ?>&nbsp;/&nbsp;DEF:<?= htmlspecialchars($card['def']) ?></span>
+                    <span class="cardAtkAndDef">ATK:<?= htmlspecialchars($card['atk']) ?>&nbsp;/&nbsp;HP:<?= htmlspecialchars($card['def']) ?></span>
                 </div>
             </div>
         <?php endforeach;?>
@@ -102,11 +102,11 @@ $previousPageUrl = buildPageUrl($page - 1);
         <?php endif; ?>
     </div>
     <p align="center">总共<?= $totalCards ?> 条数据，当前第 <?= $page ?> 页</p>
-    <h4  align="center"><a href="https://ygo.fog.moe/">点此返回FOGMOEYGO首页</a></h4>
+    <h4  align="center"><a href="https://gcg.fog.moe/">点此返回GCG首页</a></h4>
     <footer>
-        <a href="https://beian.miit.gov.cn/" target="_blank">鲁ICP备2022009156号-1</a>
-        <br><br>
-        <a href="https://fog.moe/" target="_blank">&copy; 2024 FOGMOE</a>
+        <!-- <a href="https://beian.miit.gov.cn/" target="_blank">鲁ICP备2022009156号-1</a> -->
+        <!-- <br><br> -->
+        <a href="https://fog.moe/" target="_blank">&copy; 2025 FOGMOE</a>
     </footer>
 </body>
 </html>

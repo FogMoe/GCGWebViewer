@@ -176,21 +176,41 @@ function clearAttempts($ip) {
 // 验证密钥
 function verifyKey($providedKey) {
     $env = loadEnv('.env');
-    
+
+    // 检查密钥是否存在
     if (!isset($env['UPDATE_SECRET_KEY'])) {
-        return false;
+        die(json_encode([
+            'success' => false,
+            'message' => '错误：.env 文件中未找到 UPDATE_SECRET_KEY 配置！'
+        ], JSON_UNESCAPED_UNICODE));
     }
-    
-    $secretKey = $env['UPDATE_SECRET_KEY'];
-    
+
+    $secretKey = trim($env['UPDATE_SECRET_KEY']);
+
+    // 检查密钥是否为空
+    if (empty($secretKey)) {
+        die(json_encode([
+            'success' => false,
+            'message' => '错误：UPDATE_SECRET_KEY 不能为空！请设置一个强密钥。'
+        ], JSON_UNESCAPED_UNICODE));
+    }
+
     // 检查是否是默认密钥（未修改）
     if ($secretKey === 'your_secret_key_here_change_me') {
         die(json_encode([
             'success' => false,
-            'message' => '错误：请先在 .env 文件中设置您的密钥！'
-        ]));
+            'message' => '错误：请修改默认密钥！当前使用的是示例密钥，非常不安全。'
+        ], JSON_UNESCAPED_UNICODE));
     }
-    
+
+    // 检查密钥长度（建议至少16位）
+    if (strlen($secretKey) < 16) {
+        die(json_encode([
+            'success' => false,
+            'message' => '错误：密钥太短！建议至少使用 16 位字符，当前只有 ' . strlen($secretKey) . ' 位。'
+        ], JSON_UNESCAPED_UNICODE));
+    }
+
     return $providedKey === $secretKey;
 }
 

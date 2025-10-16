@@ -7,9 +7,15 @@ try {
     $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
     $pageSize = 10; // 每页显示10条记录
     $search = isset($_GET['search']) && trim($_GET['search']) !== '' ? trim($_GET['search']) : null;
+    $effect = isset($_GET['effect']) && trim($_GET['effect']) !== '' ? trim($_GET['effect']) : null;
 
-    $cards = $view->getCardsPageViewByIdOrName($search, $search, $page, $pageSize);
-    $totalCards = $view->getTotalCardCount();
+    $cards = $view->getCardsPageViewByIdOrName($search, $search, $effect, $page, $pageSize);
+    // 如果有搜索条件，使用搜索结果总数；否则使用全部卡片总数
+    if ($search !== null || $effect !== null) {
+        $totalCards = $view->getCardCountByIdOrName($search, $search, $effect);
+    } else {
+        $totalCards = $view->getTotalCardCount();
+    }
     $totalPages = ceil($totalCards / $pageSize);
 } catch (Exception $e) {
     // 记录错误但不显示详细信息给用户
@@ -66,7 +72,12 @@ $previousPageUrl = buildPageUrl($page - 1);
         <form method="GET">
             <label for="search">卡片 ID/名称:</label>
             <input type="text" id="search" name="search" value="<?= htmlspecialchars($search ?? '') ?>">
+            <span class="effect-group">
+                <label for="effect">效果:</label>
+                <input type="text" id="effect" name="effect" value="<?= htmlspecialchars($effect ?? '') ?>">
+            </span>
             <button type="submit">查询</button>
+            <button type="button" class="reset-btn" onclick="location.href='index.php'">重置</button>
         </form>
     </div>
 
@@ -106,11 +117,40 @@ $previousPageUrl = buildPageUrl($page - 1);
         <?php if ($page > 1): ?>
             <a href="?<?= htmlspecialchars($previousPageUrl) ?>">上一页</a>
         <?php endif; ?>
+
+        <span class="page-jump">
+            <input type="number" id="pageInput" min="1" max="<?= $totalPages ?>" placeholder="页码" value="<?= $page ?>">
+            <button type="button" id="jumpBtn" onclick="jumpToPage()">跳转</button>
+        </span>
+
         <?php if ($page < $totalPages && count($cards)>=10 ): ?>
             <a href="?<?= htmlspecialchars($nextPageUrl) ?>">下一页</a>
         <?php endif; ?>
     </div>
-    <p align="center">总共<?= $totalCards ?> 条数据，当前第 <?= $page ?> 页</p>
+    <p align="center">总共<?= $totalCards ?> 条数据，当前第 <?= $page ?> 页，共 <?= $totalPages ?> 页</p>
+
+    <script>
+    function jumpToPage() {
+        const pageInput = document.getElementById('pageInput');
+        const targetPage = parseInt(pageInput.value);
+        const maxPage = <?= $totalPages ?>;
+
+        if (targetPage && targetPage >= 1 && targetPage <= maxPage) {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('page', targetPage);
+            window.location.href = '?' + urlParams.toString();
+        } else {
+            alert('请输入有效的页码（1-' + maxPage + '）');
+        }
+    }
+
+    // 支持回车键跳转
+    document.getElementById('pageInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            jumpToPage();
+        }
+    });
+    </script>
     <h4  align="center"><a href="https://gcg.fog.moe/">点此返回GCG首页</a></h4>
     <footer>
         <!-- <a href="https://beian.miit.gov.cn/" target="_blank">鲁ICP备2022009156号-1</a> -->

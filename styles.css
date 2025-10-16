@@ -41,13 +41,66 @@ a {
 a:hover {
     background-color: #e9e9e9;
 }
+.page-jump {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0 10px;
+}
+.page-jump label {
+    margin-right: 5px;
+    font-weight: normal;
+}
+.page-jump input[type="number"] {
+    width: 60px;
+    padding: 8px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 14px;
+}
+.page-jump input[type="number"]:focus {
+    outline: none;
+    border-color: #007BFF;
+    box-shadow: 0 0 3px rgba(0, 123, 255, 0.3);
+}
+.page-jump button {
+    padding: 8px 16px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+.page-jump button:hover {
+    background-color: #0056b3;
+}
 form {
     margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 label {
-    margin-right: 10px;
+    margin-right: 5px;
+    white-space: nowrap;
 }
-input[type="text"], button {
+.effect-group {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+input[type="text"] {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 150px;
+}
+button {
     padding: 8px 12px;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -60,6 +113,12 @@ button {
 }
 button:hover {
     background-color: #0056b3;
+}
+.reset-btn {
+    background-color: #6c757d;
+}
+.reset-btn:hover {
+    background-color: #5a6268;
 }
 h1, h2 {
     color: #333;

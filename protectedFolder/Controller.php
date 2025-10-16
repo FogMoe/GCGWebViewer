@@ -110,30 +110,56 @@ class Controller {
 
 
     //根据id或名字查找卡片并分页
-    public function getCardsPageByIdOrName($id = null, $name = null, $page = 1, $pageSize = 10) {
+    public function getCardsPageByIdOrName($id = null, $name = null, $effect = null, $page = 1, $pageSize = 10) {
         // 初始化查询基础部分
         $sql = "SELECT texts.id, name, desc, ot, alias, setcode, type, atk, def, level, race, attribute, category FROM texts JOIN datas ON texts.id = datas.id";
 
         // 用于存储查询条件的数组
-        $conditions = [];
+        $whereConditions = [];
         $params = [];
+
+        // ID/名称条件组（OR关系）
+        $idNameConditions = [];
 
         // 根据 id 添加条件
         if ($id !== null) {
-            if (is_numeric($id)){            
-                $conditions[] = "texts.id = :id";
+            if (is_numeric($id)){
+                $idNameConditions[] = "texts.id = :id";
                 $params[':id'] = $id;
             }
         }
 
         // 根据 name 添加条件
         if ($name !== null) {
-            $conditions[] = "texts.name LIKE :name";
+            $idNameConditions[] = "texts.name LIKE :name";
             $params[':name'] = '%' . $name . '%';
         }
-        // 如果存在搜索条件，将它们添加到 SQL 语句中
-        if (!empty($conditions)) {
-            $sql .= " WHERE " . implode(" OR ", $conditions);
+
+        // 如果有 ID 或名称条件，将它们组合（OR关系）
+        if (!empty($idNameConditions)) {
+            $whereConditions[] = '(' . implode(' OR ', $idNameConditions) . ')';
+        }
+
+        // 根据 effect 添加条件（支持空格分隔多个关键词）
+        if ($effect !== null) {
+            $keywords = array_filter(array_map('trim', explode(' ', $effect)));
+            if (!empty($keywords)) {
+                $effectConditions = [];
+                foreach ($keywords as $index => $keyword) {
+                    $paramName = ':effect' . $index;
+                    $effectConditions[] = "texts.desc LIKE " . $paramName;
+                    $params[$paramName] = '%' . $keyword . '%';
+                }
+                // 多个效果关键词使用 AND 连接（必须同时包含）
+                if (!empty($effectConditions)) {
+                    $whereConditions[] = '(' . implode(' AND ', $effectConditions) . ')';
+                }
+            }
+        }
+
+        // 如果存在搜索条件，将它们用 AND 连接
+        if (!empty($whereConditions)) {
+            $sql .= " WHERE " . implode(" AND ", $whereConditions);
         }
 
         // 添加分页条件
@@ -174,6 +200,80 @@ class Controller {
         $stmt = $this->db->prepare($sql);
         $result = $stmt->execute();
         $row = $result->fetchArray(SQLITE3_ASSOC);  // 使用关联数组模式
+        return $row['count'];  // 返回计数结果
+    }
+
+    // 根据搜索条件获取卡片总数
+    public function getCardCountByIdOrName($id = null, $name = null, $effect = null) {
+        // 初始化查询基础部分
+        $sql = "SELECT COUNT(*) as count FROM texts JOIN datas ON texts.id = datas.id";
+
+        // 用于存储查询条件的数组
+        $whereConditions = [];
+        $params = [];
+
+        // ID/名称条件组（OR关系）
+        $idNameConditions = [];
+
+        // 根据 id 添加条件
+        if ($id !== null) {
+            if (is_numeric($id)){
+                $idNameConditions[] = "texts.id = :id";
+                $params[':id'] = $id;
+            }
+        }
+
+        // 根据 name 添加条件
+        if ($name !== null) {
+            $idNameConditions[] = "texts.name LIKE :name";
+            $params[':name'] = '%' . $name . '%';
+        }
+
+        // 如果有 ID 或名称条件，将它们组合（OR关系）
+        if (!empty($idNameConditions)) {
+            $whereConditions[] = '(' . implode(' OR ', $idNameConditions) . ')';
+        }
+
+        // 根据 effect 添加条件（支持空格分隔多个关键词）
+        if ($effect !== null) {
+            $keywords = array_filter(array_map('trim', explode(' ', $effect)));
+            if (!empty($keywords)) {
+                $effectConditions = [];
+                foreach ($keywords as $index => $keyword) {
+                    $paramName = ':effect' . $index;
+                    $effectConditions[] = "texts.desc LIKE " . $paramName;
+                    $params[$paramName] = '%' . $keyword . '%';
+                }
+                // 多个效果关键词使用 AND 连接（必须同时包含）
+                if (!empty($effectConditions)) {
+                    $whereConditions[] = '(' . implode(' AND ', $effectConditions) . ')';
+                }
+            }
+        }
+
+        // 如果存在搜索条件，将它们用 AND 连接
+        if (!empty($whereConditions)) {
+            $sql .= " WHERE " . implode(" AND ", $whereConditions);
+        }
+
+        // 准备 SQL 语句
+        $stmt = $this->db->prepare($sql);
+        if ($stmt === false) {
+            throw new Exception("Failed to prepare SQL statement: " . $this->db->lastErrorMsg());
+        }
+
+        // 绑定所有参数
+        foreach ($params as $key => &$value) {
+            $stmt->bindValue($key, $value, is_int($value) ? SQLITE3_INTEGER : SQLITE3_TEXT);
+        }
+
+        // 执行查询
+        $result = $stmt->execute();
+        if ($result === false) {
+            throw new Exception("Failed to execute SQL statement: " . $this->db->lastErrorMsg());
+        }
+
+        $row = $result->fetchArray(SQLITE3_ASSOC);
         return $row['count'];  // 返回计数结果
     }
 }

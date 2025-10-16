@@ -56,6 +56,11 @@ class View{
             }
             $card['type']=implode("|", $result);
 
+            // 如果 ot=2，在类型后添加"隐藏"
+            if (isset($card['ot']) && $card['ot'] == 2) {
+                $card['type'] .= '|隐藏';
+            }
+
 
             //种族
             $race = [
@@ -64,7 +69,7 @@ class View{
                 0x4        => '天使族 ',
                 0x8        => '恶魔族 ',
                 0x10       => '死灵 ',
-                0x20       => '机械族 ',
+                0x20       => '机械 ',
                 0x40       => '水族 ',
                 0x80       => '炎族 ',
                 0x100      => '岩石族 ',
@@ -130,13 +135,17 @@ class View{
     //获取某页卡
     public function getCardsViewByPage($page, $pageSize) {return $this->toView($this->controller->getCardsByPage($page, $pageSize));}
 
-    public function getCardsPageViewByIdOrName($id = null, $name = null, $page = 1, $pageSize = 10){
-        return $this->toView($this->controller->getCardsPageByIdOrName($id, $name, $page, $pageSize));
+    public function getCardsPageViewByIdOrName($id = null, $name = null, $effect = null, $page = 1, $pageSize = 10){
+        return $this->toView($this->controller->getCardsPageByIdOrName($id, $name, $effect, $page, $pageSize));
     }
 
     // 获取卡片总数的方法
     public function getTotalCardCount() {return $this->controller->getTotalCardCount();}
 
+    // 根据搜索条件获取卡片总数
+    public function getCardCountByIdOrName($id = null, $name = null, $effect = null) {
+        return $this->controller->getCardCountByIdOrName($id, $name, $effect);
+    }
 
 
 }

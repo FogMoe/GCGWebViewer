@@ -256,7 +256,34 @@ class Controller {
                         $params[$levelParam] = $levelValue;
                     }
 
-                    // 2. 检查是否是种族名称
+                    // 2. 检查是否是"X/Y"格式（X为ATK，Y为HP/DEF，同时匹配）
+                    if (preg_match('/^(\d+)\/(\d+)$/u', $keyword, $matches)) {
+                        $atkValue = intval($matches[1]);
+                        $hpValue = intval($matches[2]);
+                        $atkHpParam1 = ':effect_atk_hp1_' . $index;
+                        $atkHpParam2 = ':effect_atk_hp2_' . $index;
+                        $keywordConditions[] = "(datas.atk = " . $atkHpParam1 . " AND datas.def = " . $atkHpParam2 . ")";
+                        $params[$atkHpParam1] = $atkValue;
+                        $params[$atkHpParam2] = $hpValue;
+                    }
+
+                    // 3. 检查是否是"XATK"或"ATKX"格式（X为数字，匹配攻击力）
+                    if (preg_match('/^(\d+)ATK$/iu', $keyword, $matches) || preg_match('/^ATK(\d+)$/iu', $keyword, $matches)) {
+                        $atkValue = intval($matches[1]);
+                        $atkParam = ':effect_atk_format' . $index;
+                        $keywordConditions[] = "datas.atk = " . $atkParam;
+                        $params[$atkParam] = $atkValue;
+                    }
+
+                    // 4. 检查是否是"XHP"或"HPX"格式（X为数字，匹配防御力/HP）
+                    if (preg_match('/^(\d+)HP$/iu', $keyword, $matches) || preg_match('/^HP(\d+)$/iu', $keyword, $matches)) {
+                        $hpValue = intval($matches[1]);
+                        $hpParam = ':effect_hp_format' . $index;
+                        $keywordConditions[] = "datas.def = " . $hpParam;
+                        $params[$hpParam] = $hpValue;
+                    }
+
+                    // 5. 检查是否是种族名称
                     if (isset($this->raceMap[$keyword])) {
                         $raceMask = $this->raceMap[$keyword];
                         $raceParam = ':effect_race_mask' . $index;
@@ -264,7 +291,7 @@ class Controller {
                         $params[$raceParam] = $raceMask;
                     }
 
-                    // 3. 检查是否是类型名称
+                    // 6. 检查是否是类型名称
                     if (isset($this->typeMap[$keyword])) {
                         $typeMask = $this->typeMap[$keyword];
                         $typeParam = ':effect_type_mask' . $index;
@@ -272,7 +299,7 @@ class Controller {
                         $params[$typeParam] = $typeMask;
                     }
 
-                    // 4. 检查是否是属性名称
+                    // 7. 检查是否是属性名称
                     if (isset($this->attributeMap[$keyword])) {
                         $attrMask = $this->attributeMap[$keyword];
                         $attrParam = ':effect_attr_mask' . $index;
@@ -280,7 +307,7 @@ class Controller {
                         $params[$attrParam] = $attrMask;
                     }
 
-                    // 5. 如果是数字，精确匹配等级、攻击力、防御力
+                    // 8. 如果是数字，精确匹配等级、攻击力、防御力
                     if (is_numeric($keyword)) {
                         $numValue = intval($keyword);
 
@@ -297,7 +324,7 @@ class Controller {
                         $params[$defParam] = $numValue;
                     }
 
-                    // 6. 描述字段模糊搜索（总是包含）
+                    // 9. 描述字段模糊搜索（总是包含）
                     $descParam = ':effect_desc' . $index;
                     $keywordConditions[] = "texts.desc LIKE " . $descParam;
                     $params[$descParam] = '%' . $keyword . '%';

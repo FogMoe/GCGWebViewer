@@ -139,81 +139,15 @@ class Controller {
         $this->db->close();
     }
 
-    //根据id获取卡牌
-    public function getCardById($id) {
-        // 准备一个参数化的 SQL 查询
-        $stmt = $this->db->prepare('SELECT texts.id, name, desc, ot, alias, setcode, type, atk, def, level, race, attribute, category FROM texts JOIN datas ON texts.id = datas.id WHERE texts.id = :id');
-        $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
-    
-        $result = $stmt->execute();
-    
-        if ($result === false) {
-            throw new Exception("Failed to execute SQL statement: " . $this->db->lastErrorMsg());
-        }
-    
-        $cards = [];
-        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-            $cards[] = $row;
-        }
-        return $cards;  // 返回所有查询到的卡片数据
-    }
-
-    //根据Name获取卡牌
-    public function getCardByName($name) {
-        // 准备一个参数化的 SQL 查询
-        $stmt = $this->db->prepare('SELECT texts.id, name, desc, ot, alias, setcode, type, atk, def, level, race, attribute, category FROM texts JOIN datas ON texts.id = datas.id WHERE texts.name LIKE :name');
-        
-        // 绑定参数时使用 LIKE 语法，'%' 是通配符，匹配任意字符序列
-        $stmt->bindValue(':name', '%' . $name . '%', SQLITE3_TEXT);
-        
-        $result = $stmt->execute();
-        
-        if ($result === false) {
-            throw new Exception("Failed to execute SQL statement: " . $this->db->lastErrorMsg());
-        }
-        
-        $cards = [];
-        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-            $cards[] = $row;
-        }
-        return $cards;  // 返回所有查询到的卡片数据
-    }
-
-
-    //获取某页卡
-    public function getCardsByPage($page, $pageSize) {
-        $offset = ($page - 1) * $pageSize;
-        $sql = "SELECT texts.id, name, desc, ot, alias, setcode, type, atk, def, level, race, attribute, category FROM texts JOIN datas ON texts.id = datas.id LIMIT :limit OFFSET :offset";
-        $stmt = $this->db->prepare($sql);
-    
-        if ($stmt === false) {
-            throw new Exception("Failed to prepare SQL statement: " . $this->db->lastErrorMsg());
-        }
-    
-        // 在SQLite3中绑定参数的方式
-        $stmt->bindValue(':limit', intval($pageSize), SQLITE3_INTEGER);
-        $stmt->bindValue(':offset', intval($offset), SQLITE3_INTEGER);
-    
-        $result = $stmt->execute();
-    
-        if ($result === false) {
-            throw new Exception("Failed to execute SQL statement: " . $this->db->lastErrorMsg());
-        }
-    
-        $cards = [];
-        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-            $cards[] = $row;
-        }
-        return $cards;  // 返回所有查询到的卡片数据
-    }
-
-
-    //根据id或名字查找卡片并分页
-    public function getCardsPageByIdOrName($id = null, $name = null, $effect = null, $page = 1, $pageSize = 10) {
-        // 初始化查询基础部分
-        $sql = "SELECT texts.id, name, desc, ot, alias, setcode, type, atk, def, level, race, attribute, category FROM texts JOIN datas ON texts.id = datas.id";
-
-        // 用于存储查询条件的数组
+    /**
+     * 构建搜索条件（私有方法，供多个查询方法复用）
+     *
+     * @param int|null $id 卡片ID
+     * @param string|null $name 卡片名称
+     * @param string|null $effect 效果关键词（支持空格分隔多个）
+     * @return array ['whereConditions' => array, 'params' => array]
+     */
+    private function buildSearchConditions($id = null, $name = null, $effect = null) {
         $whereConditions = [];
         $params = [];
 
@@ -239,7 +173,7 @@ class Controller {
             $whereConditions[] = '(' . implode(' OR ', $idNameConditions) . ')';
         }
 
-        // 根据 effect 添加条件（混合搜索：种族、数值、描述）
+        // 根据 effect 添加条件（混合搜索：种族、类型、属性、数值、描述）
         if ($effect !== null) {
             $keywords = array_filter(array_map('trim', explode(' ', $effect)));
             if (!empty($keywords)) {
@@ -341,6 +275,91 @@ class Controller {
             }
         }
 
+        return [
+            'whereConditions' => $whereConditions,
+            'params' => $params
+        ];
+    }
+
+    //根据id获取卡牌
+    public function getCardById($id) {
+        // 准备一个参数化的 SQL 查询
+        $stmt = $this->db->prepare('SELECT texts.id, name, desc, ot, alias, setcode, type, atk, def, level, race, attribute, category FROM texts JOIN datas ON texts.id = datas.id WHERE texts.id = :id');
+        $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
+    
+        $result = $stmt->execute();
+    
+        if ($result === false) {
+            throw new Exception("Failed to execute SQL statement: " . $this->db->lastErrorMsg());
+        }
+    
+        $cards = [];
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+            $cards[] = $row;
+        }
+        return $cards;  // 返回所有查询到的卡片数据
+    }
+
+    //根据Name获取卡牌
+    public function getCardByName($name) {
+        // 准备一个参数化的 SQL 查询
+        $stmt = $this->db->prepare('SELECT texts.id, name, desc, ot, alias, setcode, type, atk, def, level, race, attribute, category FROM texts JOIN datas ON texts.id = datas.id WHERE texts.name LIKE :name');
+        
+        // 绑定参数时使用 LIKE 语法，'%' 是通配符，匹配任意字符序列
+        $stmt->bindValue(':name', '%' . $name . '%', SQLITE3_TEXT);
+        
+        $result = $stmt->execute();
+        
+        if ($result === false) {
+            throw new Exception("Failed to execute SQL statement: " . $this->db->lastErrorMsg());
+        }
+        
+        $cards = [];
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+            $cards[] = $row;
+        }
+        return $cards;  // 返回所有查询到的卡片数据
+    }
+
+
+    //获取某页卡
+    public function getCardsByPage($page, $pageSize) {
+        $offset = ($page - 1) * $pageSize;
+        $sql = "SELECT texts.id, name, desc, ot, alias, setcode, type, atk, def, level, race, attribute, category FROM texts JOIN datas ON texts.id = datas.id LIMIT :limit OFFSET :offset";
+        $stmt = $this->db->prepare($sql);
+    
+        if ($stmt === false) {
+            throw new Exception("Failed to prepare SQL statement: " . $this->db->lastErrorMsg());
+        }
+    
+        // 在SQLite3中绑定参数的方式
+        $stmt->bindValue(':limit', intval($pageSize), SQLITE3_INTEGER);
+        $stmt->bindValue(':offset', intval($offset), SQLITE3_INTEGER);
+    
+        $result = $stmt->execute();
+    
+        if ($result === false) {
+            throw new Exception("Failed to execute SQL statement: " . $this->db->lastErrorMsg());
+        }
+    
+        $cards = [];
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+            $cards[] = $row;
+        }
+        return $cards;  // 返回所有查询到的卡片数据
+    }
+
+
+    //根据id或名字查找卡片并分页
+    public function getCardsPageByIdOrName($id = null, $name = null, $effect = null, $page = 1, $pageSize = 10) {
+        // 初始化查询基础部分
+        $sql = "SELECT texts.id, name, desc, ot, alias, setcode, type, atk, def, level, race, attribute, category FROM texts JOIN datas ON texts.id = datas.id";
+
+        // 构建搜索条件
+        $searchConditions = $this->buildSearchConditions($id, $name, $effect);
+        $whereConditions = $searchConditions['whereConditions'];
+        $params = $searchConditions['params'];
+
         // 如果存在搜索条件，将它们用 AND 连接
         if (!empty($whereConditions)) {
             $sql .= " WHERE " . implode(" AND ", $whereConditions);
@@ -392,48 +411,10 @@ class Controller {
         // 初始化查询基础部分
         $sql = "SELECT COUNT(*) as count FROM texts JOIN datas ON texts.id = datas.id";
 
-        // 用于存储查询条件的数组
-        $whereConditions = [];
-        $params = [];
-
-        // ID/名称条件组（OR关系）
-        $idNameConditions = [];
-
-        // 根据 id 添加条件
-        if ($id !== null) {
-            if (is_numeric($id)){
-                $idNameConditions[] = "texts.id = :id";
-                $params[':id'] = $id;
-            }
-        }
-
-        // 根据 name 添加条件
-        if ($name !== null) {
-            $idNameConditions[] = "texts.name LIKE :name";
-            $params[':name'] = '%' . $name . '%';
-        }
-
-        // 如果有 ID 或名称条件，将它们组合（OR关系）
-        if (!empty($idNameConditions)) {
-            $whereConditions[] = '(' . implode(' OR ', $idNameConditions) . ')';
-        }
-
-        // 根据 effect 添加条件（支持空格分隔多个关键词）
-        if ($effect !== null) {
-            $keywords = array_filter(array_map('trim', explode(' ', $effect)));
-            if (!empty($keywords)) {
-                $effectConditions = [];
-                foreach ($keywords as $index => $keyword) {
-                    $paramName = ':effect' . $index;
-                    $effectConditions[] = "texts.desc LIKE " . $paramName;
-                    $params[$paramName] = '%' . $keyword . '%';
-                }
-                // 多个效果关键词使用 AND 连接（必须同时包含）
-                if (!empty($effectConditions)) {
-                    $whereConditions[] = '(' . implode(' AND ', $effectConditions) . ')';
-                }
-            }
-        }
+        // 构建搜索条件
+        $searchConditions = $this->buildSearchConditions($id, $name, $effect);
+        $whereConditions = $searchConditions['whereConditions'];
+        $params = $searchConditions['params'];
 
         // 如果存在搜索条件，将它们用 AND 连接
         if (!empty($whereConditions)) {

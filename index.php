@@ -70,13 +70,13 @@ $previousPageUrl = buildPageUrl($page - 1);
     <h1  align="center">Galaxy Card Game</h1>
     <div class="search">
         <form method="GET">
-            <label for="search">卡片 ID/名称:</label>
-            <input type="text" id="search" name="search" value="<?= htmlspecialchars($search ?? '') ?>">
+            <label for="search">卡片ID/名称:</label>
+            <input type="text" id="search" name="search" placeholder="精确查询" value="<?= htmlspecialchars($search ?? '') ?>">
             <span class="effect-group">
-                <label for="effect">效果:</label>
-                <input type="text" id="effect" name="effect" value="<?= htmlspecialchars($effect ?? '') ?>">
+                <label for="effect">详细筛选:</label>
+                <input type="text" id="effect" name="effect" placeholder="空格分隔多个条件" value="<?= htmlspecialchars($effect ?? '') ?>">
             </span>
-            <button type="submit">查询</button>
+            <button type="submit">搜索</button>
             <button type="button" class="reset-btn" onclick="location.href='index.php'">重置</button>
         </form>
     </div>

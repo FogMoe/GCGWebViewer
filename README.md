@@ -450,6 +450,194 @@ php protectedFolder/Test.php
 curl "http://localhost:8000/update.php?action=status&key=YOUR_KEY"
 ```
 
+## 🎯 待实现功能 / 改进建议
+
+以下是可以进一步提升系统的建议功能，按优先级排序：
+
+### 高优先级
+
+#### 1. 搜索提示文本
+
+在效果搜索框添加提示，告知用户支持的搜索方式：
+
+```php
+// 在 index.php 的效果搜索框附近添加
+<span class="effect-group">
+    <label for="effect">效果:</label>
+    <input type="text" id="effect" name="effect"
+           placeholder="支持: 种族 类型 属性 数值 补给X 描述关键词"
+           value="<?= htmlspecialchars($effect ?? '') ?>">
+    <span class="search-hint" style="font-size: 12px; color: #666;">
+        示例: 龙族 单位卡 5补给 2500
+    </span>
+</span>
+```
+
+**效果**: 提升用户体验，减少搜索困惑
+
+#### 2. 搜索无结果提示
+
+当搜索无结果时，提供友好的提示和建议：
+
+```php
+// 在 index.php 的卡片列表区域添加
+<?php if (empty($cards) && ($search || $effect)): ?>
+    <div style="text-align: center; color: #666; padding: 20px; background: #f5f5f5; border-radius: 8px; margin: 20px;">
+        <h3>😔 未找到匹配的卡片</h3>
+        <p>搜索建议：</p>
+        <ul style="list-style: none; padding: 0;">
+            <li>✓ 检查关键词拼写是否正确</li>
+            <li>✓ 尝试使用更少的关键词</li>
+            <li>✓ 支持的种族: 龙族、机械、人类、炎族、水族等</li>
+            <li>✓ 支持的类型: 单位卡、支援卡、战术卡、部队等</li>
+            <li>✓ 支持的属性: 军团、舰队、空间站、星港、指挥官等</li>
+            <li>✓ 支持格式: 补给5 或 5补给（等级查询）</li>
+        </ul>
+    </div>
+<?php endif; ?>
+```
+
+**效果**: 减少用户挫败感，提供更好的引导
+
+#### 3. 数据库索引优化
+
+如果卡片数量超过 1000 张，建议添加数据库索引提升查询性能：
+
+```sql
+-- 在数据库中执行（仅执行一次）
+CREATE INDEX IF NOT EXISTS idx_race ON datas(race);
+CREATE INDEX IF NOT EXISTS idx_type ON datas(type);
+CREATE INDEX IF NOT EXISTS idx_attribute ON datas(attribute);
+CREATE INDEX IF NOT EXISTS idx_level ON datas(level);
+CREATE INDEX IF NOT EXISTS idx_atk ON datas(atk);
+CREATE INDEX IF NOT EXISTS idx_def ON datas(def);
+CREATE INDEX IF NOT EXISTS idx_name ON texts(name);
+CREATE INDEX IF NOT EXISTS idx_desc ON texts(desc);
+```
+
+**注意**: 需要在数据库更新脚本中添加，确保每次下载新数据库后自动创建索引
+
+**效果**: 显著提升搜索查询速度，特别是大数据量时
+
+### 中优先级
+
+#### 4. 全半角数字兼容
+
+处理全角和半角数字的兼容性，提升中文输入法用户体验：
+
+```php
+// 在 Controller.php 的关键词处理循环开始处添加
+foreach ($keywords as $index => $keyword) {
+    // 全角转半角
+    $keyword = str_replace(
+        ['０','１','２','３','４','５','６','７','８','９'],
+        ['0','1','2','3','4','5','6','7','8','9'],
+        $keyword
+    );
+
+    // 后续的匹配逻辑...
+}
+```
+
+**效果**: 支持中文输入法直接输入数字，无需切换半角
+
+#### 5. 搜索历史记录
+
+使用 localStorage 保存用户最近的搜索记录：
+
+```javascript
+// 在 index.php 的 <script> 区域添加
+// 保存搜索历史
+function saveSearchHistory(search, effect) {
+    let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+    const item = { search, effect, time: Date.now() };
+    history = [item, ...history.filter(h => h.search !== search || h.effect !== effect)].slice(0, 10);
+    localStorage.setItem('searchHistory', JSON.stringify(history));
+}
+
+// 显示搜索建议
+function showSearchSuggestions() {
+    const history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+    // 在搜索框下方显示历史记录
+}
+```
+
+**效果**: 方便用户快速重复常用搜索
+
+### 低优先级
+
+#### 6. 范围查询支持
+
+允许用户搜索数值范围，例如攻击力 2000-3000：
+
+```php
+// 添加范围查询解析
+// 格式示例: "ATK:2000-3000" 或 "等级:3-5" 或 "攻击:2000-3000"
+if (preg_match('/^(ATK|攻击|攻击力):(\d+)-(\d+)$/u', $keyword, $matches)) {
+    $minAtk = intval($matches[2]);
+    $maxAtk = intval($matches[3]);
+    $keywordConditions[] = "(datas.atk BETWEEN :atk_min{$index} AND :atk_max{$index})";
+    $params[":atk_min{$index}"] = $minAtk;
+    $params[":atk_max{$index}"] = $maxAtk;
+}
+// 类似处理 DEF、LEVEL 范围
+```
+
+**效果**: 支持更精确的筛选需求
+
+#### 7. 导出搜索结果
+
+允许用户将搜索结果导出为 CSV 或 JSON：
+
+```php
+// 在 index.php 添加导出按钮
+<?php if ($search || $effect): ?>
+    <a href="export.php?search=<?= urlencode($search) ?>&effect=<?= urlencode($effect) ?>"
+       class="export-btn">导出结果 (CSV)</a>
+<?php endif; ?>
+```
+
+**效果**: 方便数据分析和离线查看
+
+#### 8. 高级筛选面板
+
+创建一个可折叠的高级筛选面板，替代文本搜索：
+
+```html
+<details class="advanced-filter">
+    <summary>🔧 高级筛选</summary>
+    <form>
+        <select name="race"><option>选择种族...</option></select>
+        <select name="type"><option>选择类型...</option></select>
+        <input type="number" name="level_min" placeholder="最低等级">
+        <input type="number" name="level_max" placeholder="最高等级">
+        <!-- 更多筛选选项 -->
+    </form>
+</details>
+```
+
+**效果**: 提供可视化的筛选界面，降低学习成本
+
+### 实现优先级建议
+
+1. **立即实现** :
+   - 搜索提示文本
+   - 搜索无结果提示
+
+2. **短期实现** :
+   - 数据库索引优化
+   - 全半角数字兼容
+
+3. **中期实现** :
+   - 搜索历史记录
+   - 范围查询支持
+
+4. **长期实现** :
+   - 导出搜索结果
+   - 高级筛选面板
+
+---
+
 ## 🤝 贡献指南
 
 欢迎贡献代码！请遵循以下步骤：
@@ -467,27 +655,6 @@ curl "http://localhost:8000/update.php?action=status&key=YOUR_KEY"
 - 使用参数化查询防止 SQL 注入
 - 添加必要的注释
 
-## 📝 变更日志
-
-### v2.0.0 (2025-10-15)
-
-**新增**:
-- 🔐 完整的安全加固（SSL 验证、IP 防伪、文件验证）
-- 🔄 智能自动更新系统
-- 🛡️ 防暴力破解机制
-- 📝 日志轮转功能
-- 🗂️ .htaccess 目录保护
-
-**改进**:
-- ⚡ 性能优化（1小时更新间隔）
-- 🎨 更好的错误处理
-- 📱 响应式设计改进
-
-**修复**:
-- 🐛 修复等级计算逻辑
-- 🐛 修复空搜索问题
-- 🐛 修复并发下载问题
-
 ## 📄 许可证
 
 本项目采用 [GPL-3.0 License](LICENSE) 开源。
@@ -496,7 +663,7 @@ curl "http://localhost:8000/update.php?action=status&key=YOUR_KEY"
 
 - [FogMoe/galaxycardgame](https://github.com/FogMoe/galaxycardgame) - 卡片数据源
 - [SQLite](https://www.sqlite.org/) - 轻量级数据库
-- 所有贡献者
+- 所有贡献者 [Rabimew](https://github.com/RabiMew) 和 [ScarletKc](https://github.com/ScarletKc)
 
 ## 📞 联系方式
 
